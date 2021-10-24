@@ -1555,6 +1555,9 @@ select {
 .bg-opacity-25 {
 	--tw-bg-opacity: 0.25;
 }
+.bg-opacity-50 {
+	--tw-bg-opacity: 0.5;
+}
 .bg-cover {
 	background-size: cover;
 }
