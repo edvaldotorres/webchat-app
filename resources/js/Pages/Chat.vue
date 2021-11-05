@@ -44,7 +44,10 @@
               >
                 <p class="flex items-center">
                   {{ user.name }}
-                  <span class="ml-2 w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span
+                    v-if="user.notification"
+                    class="ml-2 w-2 h-2 bg-blue-500 rounded-full"
+                  ></span>
                 </p>
               </li>
             </ul>
@@ -120,6 +123,7 @@
 import { defineComponent } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import moment from "moment";
+import store from "../store";
 
 export default defineComponent({
   components: {
@@ -133,6 +137,12 @@ export default defineComponent({
       userActive: null,
       message: "",
     };
+  },
+
+  computed: {
+    user() {
+      return store.state.user;
+    },
   },
 
   methods: {
@@ -160,7 +170,7 @@ export default defineComponent({
         })
         .then((response) => {
           this.messages.push({
-            from: "1",
+            from: this.user.id,
             to: this.userActive.id,
             text: this.message,
             created_at: new Date().toISOString(),
@@ -181,6 +191,22 @@ export default defineComponent({
   mounted() {
     axios.get("api/users").then((response) => {
       this.users = response.data.users;
+    });
+
+    Echo.private(`user.${this.user.id}`).listen(".SendMessage", async (e) => {
+      if (this.userActive && this.userActive.id === e.message.from) {
+        await this.messages.push(e.message);
+        this.scrollToBottom();
+      } else {
+        const user = this.users.filter((user) => {
+          if (user.id === e.message.from) {
+            return user;
+          }
+        });
+        if (user) {
+          Vue.set(user[0], "notification", true);
+        }
+      }
     });
   },
 
